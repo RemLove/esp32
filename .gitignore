@@ -1,0 +1,18 @@
+# ===== ESP-IDF 构建产物（147MB，绝不进库）=====
+# build/ 里有 ninja 中间文件、bootloader 拷贝、.bin/.elf、compile_commands.json，
+# 全部可由 idf.py build 重新生成；入库会让仓库膨胀且每次编译 git status 全红
+**/build/
+
+# menuconfig 改动 sdkconfig 时自动生成的备份，纯临时
+**/sdkconfig.old
+**/sdkconfig.old.bak
+
+# 组件管理器下载的第三方组件（可由 idf.py reconfigure 重新拉取，
+# 版本由 dependencies.lock 锁定，那个文件要入库）
+**/managed_components/
+
+# ===== 编辑器/系统垃圾 =====
+*.tmp
+~$*
+Thumbs.db
+.DS_Store
