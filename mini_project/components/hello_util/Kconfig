@@ -1,0 +1,9 @@
+menu "hello_util"
+
+    config HELLO_NAME
+        string "向谁打招呼"
+        default "atguigu"
+        help
+            设置打招呼的对象名称，如 atguigu、World 等。
+
+endmenu

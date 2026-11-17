@@ -627,7 +627,7 @@ CONFIG_IDF_TARGET_ARCH="xtensa"
 # default:
 CONFIG_IDF_TARGET="esp32s3"
 # default:
-CONFIG_IDF_INIT_VERSION="$IDF_INIT_VERSION"
+CONFIG_IDF_INIT_VERSION="6.1.0"
 # default:
 CONFIG_IDF_TARGET_ESP32S3=y
 # default:
@@ -2597,8 +2597,7 @@ CONFIG_FATFS_DONT_TRUST_LAST_ALLOC=0
 #
 # default:
 # CONFIG_FREERTOS_UNICORE is not set
-# default:
-CONFIG_FREERTOS_HZ=100
+CONFIG_FREERTOS_HZ=1000
 # default:
 # CONFIG_FREERTOS_CHECK_STACKOVERFLOW_NONE is not set
 # default:
@@ -3868,6 +3867,13 @@ CONFIG_WL_SECTOR_SIZE_4096=y
 # default:
 CONFIG_WL_SECTOR_SIZE=4096
 # end of Wear Levelling
+
+#
+# hello_util
+#
+# default:
+CONFIG_HELLO_NAME="atguigu"
+# end of hello_util
 # end of Component config
 
 # default:
