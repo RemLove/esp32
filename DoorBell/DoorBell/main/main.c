@@ -2,6 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "doorbell_button.h"
+#include "led.h"
 
 void button_callback(void *btn_handle, void *usr_data)
 {
@@ -11,6 +12,7 @@ void button_callback(void *btn_handle, void *usr_data)
     if (event == 1)
     {
         ESP_LOGI("button_callback", "sw2 single click");
+        led_toggle();
     }
     if (event == 2)
     {
