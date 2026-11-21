@@ -16,6 +16,8 @@
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
 
+static EventGroupHandle_t s_wifi_event_group;
+
 static const char *TAG1 = "wifi station";
 
 static int s_retry_num = 0;
@@ -49,7 +51,6 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-static EventGroupHandle_t s_wifi_event_group;
 wifi_init_sta()
 {
     s_wifi_event_group = xEventGroupCreate();
@@ -78,7 +79,7 @@ wifi_init_sta()
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = "越王",
-            .password = 113937604,
+            .password = "113937604",
             // .threshold.authmode = ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD,
             // .sae_pwe_h2e = ESP_WIFI_SAE_MODE,
             // .sae_h2e_identifier = EXAMPLE_H2E_IDENTIFIER,
@@ -102,12 +103,12 @@ wifi_init_sta()
     if (bits & WIFI_CONNECTED_BIT)
     {
         ESP_LOGI(TAG1, "connected to ap SSID:%s password:%s",
-                 "越王", 113937604);
+                 "越王", "113937604");
     }
     else if (bits & WIFI_FAIL_BIT)
     {
         ESP_LOGI(TAG1, "Failed to connect to SSID:%s, password:%s",
-                 "越王", 113937604);
+                 "越王", "113937604");
     }
     else
     {
