@@ -13,5 +13,5 @@ extern i2c_master_bus_handle_t i2c0_bus_handle;
 void Codec_Init(void);
 void Codec_MenLing_play(void);
 
-void Codec_Play(uint8_t *data, int size);
+void Codec_Play(const uint8_t *data, int size);
 void Codec_Record(uint8_t *data, int size);

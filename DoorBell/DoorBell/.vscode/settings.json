@@ -19,13 +19,14 @@
       "inheritDefault": "hidden"
     }
   },
-  "idf.openOcdConfigs": [
-    "board/esp32s3-builtin.cfg"
+  "clangd.path": "D:\\Espressif\\tools\\esp-clangd\\esp-21.1.3_20260408\\esp-clangd\\bin\\clangd.exe",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=d:\\Project\\ESP32-S3FN8\\DoorBell\\DoorBell\\build"
   ],
-  "idf.port": "detect",
   "idf.currentSetup": "D:\\esp\\v6.1\\esp-idf",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32s3"
-  },
-  "idf.flashType": "UART"
+  }
 }

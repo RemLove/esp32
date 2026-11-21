@@ -3,7 +3,7 @@
     {
       "name": "ESP-IDF",
       "compilerPath": "",
-      "compileCommands": "${config:idf.buildPath}/compile_commands.json",
+      "compileCommands": "d:\\Project\\ESP32-S3FN8\\DoorBell\\DoorBell\\build\\compile_commands.json",
       "intelliSenseMode": "gcc-x86",
       "includePath": [
         "${workspaceFolder}/**"

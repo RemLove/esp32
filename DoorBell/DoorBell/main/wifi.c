@@ -51,7 +51,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-wifi_init_sta()
+void wifi_init_sta(void)
 {
     s_wifi_event_group = xEventGroupCreate();
 

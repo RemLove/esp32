@@ -31,6 +31,8 @@ uint8_t data[1024];
 
 void app_main(void)
 {
+    Codec_Init();
+
     doorbell_button_init();
     // 注册sw2按键的回调函数
     doorbell_button_sw2_register_callback(BUTTON_SINGLE_CLICK, button_callback, (void *)1);

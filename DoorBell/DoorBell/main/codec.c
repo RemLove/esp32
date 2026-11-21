@@ -8,10 +8,10 @@ i2s_chan_handle_t i2s_tx_handle = NULL;
 
 esp_codec_dev_handle_t codec_dev_handle = NULL;
 
-const uint8_t menling_start[] = {"_binary_menling_pcm_start"};
-const uint8_t menling_end[] = {"_binary_menling_pcm_end"};
+extern const uint8_t menling_start[] asm("_binary_menling_pcm_start");
+extern const uint8_t menling_end[] asm("_binary_menling_pcm_end");
 
-void Codec_I2c_Init(void)
+esp_err_t Codec_I2c_Init(void)
 {
     // Implementation for codec I2C initialization
     i2c_master_bus_config_t i2c_bus_config = {0};
@@ -21,7 +21,7 @@ void Codec_I2c_Init(void)
     i2c_bus_config.sda_io_num = GPIO_NUM_0; // Example SDA
     i2c_bus_config.glitch_ignore_cnt = 7;
     i2c_bus_config.flags.enable_internal_pullup = true;
-    // return i2c_new_master_bus(&i2c_bus_config, &i2c0_bus_handle);
+    return i2c_new_master_bus(&i2c_bus_config, &i2c0_bus_handle);
 }
 
 void Codec_I2s_Init(void)
@@ -88,7 +88,7 @@ void Codec_Init(void)
     // 以下代码展示如何播放音频
     esp_codec_dev_set_out_vol(codec_dev_handle, 60.0);
     esp_codec_dev_sample_info_t fs = {
-        .sample_rate = 48000,
+        .sample_rate = 16000,
         .channel = 2,
         .bits_per_sample = 16,
     };
@@ -97,7 +97,7 @@ void Codec_Init(void)
     esp_codec_dev_set_in_gain(codec_dev_handle, 30.0);
 }
 
-void Codec_Play(uint8_t *data, int size)
+void Codec_Play(const uint8_t *data, int size)
 {
     esp_codec_dev_write(codec_dev_handle, data, size);
 }
