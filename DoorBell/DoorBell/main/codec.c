@@ -8,8 +8,8 @@ i2s_chan_handle_t i2s_tx_handle = NULL;
 
 esp_codec_dev_handle_t codec_dev_handle = NULL;
 
-extern const uint8_t menling_start[] = {"_binary_menling_pcm_start"};
-extern const uint8_t menling_end[] = {"_binary_menling_pcm_end"};
+const uint8_t menling_start[] = {"_binary_menling_pcm_start"};
+const uint8_t menling_end[] = {"_binary_menling_pcm_end"};
 
 void Codec_I2c_Init(void)
 {
@@ -93,14 +93,21 @@ void Codec_Init(void)
         .bits_per_sample = 16,
     };
     esp_codec_dev_open(codec_dev_handle, &fs);
+    // 增益
+    esp_codec_dev_set_in_gain(codec_dev_handle, 30.0);
 }
 
-void Code_Play(uint8_t *data, int size)
+void Codec_Play(uint8_t *data, int size)
 {
-    esp_codec_dev_write(codec_dev_handle, data, sizeof(data));
+    esp_codec_dev_write(codec_dev_handle, data, size);
 }
 
-void Code_MenLing_play(void)
+void Codec_MenLing_play(void)
 {
-    Code_Play(menling_start, menling_end - menling_start);
+    Codec_Play(menling_start, menling_end - menling_start);
+}
+
+void Codec_Record(uint8_t *data, int size)
+{
+    esp_codec_dev_read(codec_dev_handle, data, size);
 }
