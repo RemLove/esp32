@@ -19,3 +19,4 @@ dependencies:
   espressif/esp_codec_dev: ^1.6.2
   espressif/led_strip: '*'
   espressif/network_provisioning: '*'
+  espressif/qrcode: ^0.2.0

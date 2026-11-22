@@ -1,7 +1,6 @@
 #include "codec.h"
 
 i2c_master_bus_handle_t i2c0_bus_handle = NULL;
-static const char *TAG;
 // 接收通道和发送通道
 i2s_chan_handle_t i2s_rx_handle = NULL;
 i2s_chan_handle_t i2s_tx_handle = NULL;
@@ -99,7 +98,9 @@ void Codec_Init(void)
 
 void Codec_Play(const uint8_t *data, int size)
 {
-    esp_codec_dev_write(codec_dev_handle, data, size);
+    /* esp_codec_dev_write 的形参声明是 void *（组件 API 本身没加 const 标注），
+       但播放时它只读不写这块缓冲区，这里显式转换是安全的 */
+    esp_codec_dev_write(codec_dev_handle, (void *)data, size);
 }
 
 void Codec_MenLing_play(void)
