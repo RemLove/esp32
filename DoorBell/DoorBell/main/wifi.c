@@ -63,6 +63,15 @@ static void wifi_prov_print_qr(const char *name, const char *username, const cha
     ESP_LOGI(TAG1, "If QR code is not visible, copy paste the below URL in a browser.\n%s?data=%s", QRCODE_BASE_URL, payload);
 }
 
+/* 启动 STA：配过网时用。凭证存在 NVS 里（esp_wifi_init 时自动恢复），
+   esp_wifi_start() 触发 WIFI_EVENT_STA_START，事件回调里 esp_wifi_connect() 完成连接 */
+static void wifi_init_sta(void)
+{
+    /* Start Wi-Fi in station mode */
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_start());
+}
+
 static void event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id, void *event_data)
 {
@@ -155,8 +164,24 @@ static void event_handler(void *arg, esp_event_base_t event_base,
         }
     }
 }
-void wifi_init_sta(void)
+
+void Wifi_NVS_Init(void)
 {
+    // Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+}
+
+void Wifi_Init(void)
+{
+    /* NVS 先行：配网凭证就存在这里 */
+    Wifi_NVS_Init();
+
     s_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
@@ -167,6 +192,7 @@ void wifi_init_sta(void)
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
+    /* 事件回调只注册这一次，配网/连接两条路径共用 */
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
     esp_event_handler_instance_t instance_prov;
@@ -188,9 +214,11 @@ void wifi_init_sta(void)
     network_prov_mgr_config_t config = {
         .scheme = network_prov_scheme_ble,
         /* 注意：这个"handler"不是枚举值，是展开成 { .event_cb = ..., .user_data = NULL }
-           的结构体宏。FREE_BTDM = 配网结束后释放蓝牙+双模控制器内存，
+           的结构体宏，不能传 5 或 (void*)5。
+           FREE_BTDM = 配网结束后释放蓝牙+双模控制器内存，
            门铃配完网就不再需要蓝牙了 */
-        .scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM};
+        .scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM,
+    };
     // 初始化配网信息
     ESP_ERROR_CHECK(network_prov_mgr_init(config));
     // 检查是否配过网
@@ -238,7 +266,7 @@ void wifi_init_sta(void)
         };
         network_prov_scheme_ble_set_service_uuid(custom_service_uuid);
         ESP_ERROR_CHECK(network_prov_mgr_start_provisioning(security, (const void *)sec_params, service_name, NULL));
-        // 打印二维码
+        // 打印二维码（手机推凭证后 manager 自动写 NVS 并连接，无需手动 set_config）
         wifi_prov_print_qr(service_name, username, pop, "ble");
     }
     else // 如果配过网
@@ -249,16 +277,11 @@ void wifi_init_sta(void)
          * so let's release it's resources */
         ESP_ERROR_CHECK(network_prov_mgr_deinit());
 
-        /* 凭证存在 NVS 里，esp_wifi_init 时已自动恢复；
-           esp_wifi_start() 触发 WIFI_EVENT_STA_START，回调里 esp_wifi_connect() 完成连接 */
-        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-        ESP_ERROR_CHECK(esp_wifi_start());
+        /* Start Wi-Fi station（凭证用 NVS 里手机配网写入的那份） */
+        wifi_init_sta();
     }
 
-    /* 已配网路径：凭证由 NVS 提供，这里不再 set_config 覆盖；
-       未配网路径：凭证由手机推送后 manager 自动写入并连接 */
-    ESP_LOGI(TAG1, "wifi_init_sta finished.");
-
+    /* 统一等待：连接成功 or 五次重试全失败 */
     EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
                                            WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
                                            pdFALSE,
@@ -279,23 +302,4 @@ void wifi_init_sta(void)
     {
         ESP_LOGE(TAG1, "UNEXPECTED EVENT");
     }
-}
-
-void Wifi_NVS_Init(void)
-{
-    // Initialize NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
-    {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-}
-
-void Wifi_Init(void)
-{
-    Wifi_NVS_Init();
-    ESP_LOGI(TAG1, "ESP_WIFI_MODE_STA");
-    wifi_init_sta();
 }
