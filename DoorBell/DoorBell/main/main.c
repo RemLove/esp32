@@ -5,6 +5,7 @@
 #include "led.h"
 #include "codec.h"
 #include "wifi.h"
+#include "lcd.h"
 
 void button_callback(void *btn_handle, void *usr_data)
 {
@@ -15,7 +16,7 @@ void button_callback(void *btn_handle, void *usr_data)
     {
         ESP_LOGI("button_callback", "sw2 single click");
         led_toggle();
-        Codec_MenLing_play();
+        // Codec_MenLing_play();
     }
     if (event == 2)
     {
@@ -32,6 +33,9 @@ uint8_t data[1024];
 void app_main(void)
 {
     Codec_Init();
+    Wifi_Init();
+    Lcd_init();
+    Lcd_Test();
 
     doorbell_button_init();
     // 注册sw2按键的回调函数
@@ -40,7 +44,7 @@ void app_main(void)
     doorbell_button_sw3_register_callback(BUTTON_SINGLE_CLICK, button_callback, (void *)2);
     doorbell_button_sw3_register_callback(BUTTON_LONG_PRESS_START, button_callback, (void *)3);
 
-    Wifi_Init();
+    vTaskDelay(50);
 
     /*  while (1)
      {
