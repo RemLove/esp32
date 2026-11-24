@@ -6,6 +6,9 @@
 #include "codec.h"
 #include "wifi.h"
 #include "lcd.h"
+#include "camera.h"
+
+uint8_t *rgb565_buffer = NULL;
 
 void button_callback(void *btn_handle, void *usr_data)
 {
@@ -44,7 +47,18 @@ void app_main(void)
     doorbell_button_sw3_register_callback(BUTTON_SINGLE_CLICK, button_callback, (void *)2);
     doorbell_button_sw3_register_callback(BUTTON_LONG_PRESS_START, button_callback, (void *)3);
 
-    vTaskDelay(50);
+    Camera_Init();
+    rgb565_buffer = (uint8_t *)calloc(240 * 320, sizeof(uint16_t));
+
+    while (1)
+    {
+        camera_fb_t *fb = Camera_Capture();
+        // 现在是jpeg格式，需要转成rgb565格式
+        Camera_jpeg2rgb565(fb->buf, fb->len, rgb565_buffer);
+        Lcd_Show_Image(rgb565_buffer);
+        Camera_Return_Fb(fb);
+        vTaskDelay(500);
+    }
 
     /*  while (1)
      {
