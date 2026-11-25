@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_log.h"
 #include "doorbell_button.h"
 #include "led.h"
 #include "codec.h"
@@ -47,17 +48,39 @@ void app_main(void)
     doorbell_button_sw3_register_callback(BUTTON_SINGLE_CLICK, button_callback, (void *)2);
     doorbell_button_sw3_register_callback(BUTTON_LONG_PRESS_START, button_callback, (void *)3);
 
-    Camera_Init();
+    // 摄像头初始化失败就别进预览循环了:
+    // 进去也是 fb==NULL -> fb->buf 直接 panic, 不如停在健康的任务上(按键/codec 不受影响)
+    if (Camera_Init() != ESP_OK)
+    {
+        ESP_LOGE("app_main", "camera init failed, preview loop not started");
+        return;
+    }
+
     rgb565_buffer = (uint8_t *)calloc(240 * 320, sizeof(uint16_t));
+    if (rgb565_buffer == NULL)
+    {
+        // 150KB 大块分配, WiFi/BT 协议栈起来后内部堆很紧张, NULL 不是不可能
+        ESP_LOGE("app_main", "rgb565_buffer calloc failed, preview loop not started");
+        return;
+    }
 
     while (1)
     {
         camera_fb_t *fb = Camera_Capture();
+        if (fb == NULL)
+        {
+            // 这一帧没拿到(驱动忙/相机异常), 停一拍再试, 别解引用
+            vTaskDelay(pdMS_TO_TICKS(500));
+            continue;
+        }
         // 现在是jpeg格式，需要转成rgb565格式
-        Camera_jpeg2rgb565(fb->buf, fb->len, rgb565_buffer);
-        Lcd_Show_Image(rgb565_buffer);
+        if (Camera_jpeg2rgb565(fb->buf, fb->len, rgb565_buffer) == ESP_OK)
+        {
+            Lcd_Show_Image(rgb565_buffer);
+        }
         Camera_Return_Fb(fb);
-        vTaskDelay(500);
+        // CONFIG_FREERTOS_HZ=100, 裸 500 是 500 tick = 5 秒!
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 
     /*  while (1)

@@ -1,6 +1,8 @@
 #include "camera.h"
+#include "jpeg_decoder.h"
+#include "esp_log.h"
 
-static const char *TAG = "example:take_picture";
+static const char *TAG = "camera";
 
 static camera_config_t camera_config = {
     .pin_pwdn = CAM_PIN_PWDN,
@@ -34,25 +36,34 @@ static camera_config_t camera_config = {
     .jpeg_buffer_size = 0, // Set to a custom size in bytes for JPEG mode, or 0 to use the default size
 };
 
-void Camera_Init(void)
+esp_err_t Camera_Init(void)
 {
     // initialize the camera
     esp_err_t err = esp_camera_init(&camera_config);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "Camera Init Failed");
-        // return err;
+        // 初始化失败必须把错误码交回调用方:
+        // 带着"半死"的摄像头继续跑, 后面 fb_get 全是 NULL, 错误会层层放大
+        ESP_LOGE(TAG, "Camera Init Failed 0x%x", err);
+        return err;
     }
+    ESP_LOGI(TAG, "Camera Init OK");
+    return ESP_OK;
 }
 
 camera_fb_t *Camera_Capture(void)
 {
-    ESP_LOGI(TAG, "Taking picture...");
     camera_fb_t *pic = esp_camera_fb_get();
+    if (pic == NULL)
+    {
+        // 拿不到帧就返回 NULL, 判空是调用方的责任;
+        // 这里若直接用, 调用方解引用 fb->buf 就是 LoadProhibited panic
+        ESP_LOGE(TAG, "Camera Capture Failed (fb == NULL)");
+    }
     return pic;
 }
 
-void Camera_jpeg2rgb565(uint8_t *jpeg_data, uint32_t jpeg_len, uint8_t *jpeg_buffer)
+esp_err_t Camera_jpeg2rgb565(uint8_t *jpeg_data, uint32_t jpeg_len, uint8_t *jpeg_buffer)
 {
     // JPEG decode config
     esp_jpeg_image_cfg_t jpeg_cfg = {
@@ -67,8 +78,15 @@ void Camera_jpeg2rgb565(uint8_t *jpeg_data, uint32_t jpeg_len, uint8_t *jpeg_buf
         }};
 
     // JPEG decode
-    esp_jpeg_image_output_t outimg;
-    esp_jpeg_decode(&jpeg_cfg, &outimg);
+    // 返回值必须接: 解码失败时 outbuf 内容不可信, 直接刷屏会花屏
+    esp_jpeg_image_output_t outimg = {0};
+    esp_err_t err = esp_jpeg_decode(&jpeg_cfg, &outimg);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "JPEG decode Failed 0x%x", err);
+        return err;
+    }
+    return ESP_OK;
 }
 
 void Camera_Return_Fb(camera_fb_t *pic)

@@ -20,10 +20,10 @@
 #define CAM_PIN_HREF 39
 #define CAM_PIN_PCLK 34
 
-void Camera_Init(void);
+esp_err_t Camera_Init(void);
 
 camera_fb_t *Camera_Capture(void);
 
-void Camera_jpeg2rgb565(uint8_t *jpeg_data, uint32_t jpeg_len, uint8_t *jpeg_buffer);
+esp_err_t Camera_jpeg2rgb565(uint8_t *jpeg_data, uint32_t jpeg_len, uint8_t *jpeg_buffer);
 
 void Camera_Return_Fb(camera_fb_t *pic);
