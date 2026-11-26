@@ -22,3 +22,4 @@ dependencies:
   espressif/qrcode: ^0.2.0
   esp_jpeg: '>=1.0.2'
   espressif/esp32-camera: ^2.1.9
+  espressif/mqtt: ^1.1.0
